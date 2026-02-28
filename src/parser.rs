@@ -69,9 +69,10 @@ impl Parser {
 
 
         for alert_info in alerts_info {
-            let alert_id = alert_info["id"].as_u64()
+            // do not use ordinary id here, it may be changed
+            let alert_id = alert_info["location_uid"].as_str()
                 .ok_or("Cannot parse id of alert.")?
-                .try_into()?;
+                .parse()?;
             active_list.push(alert_id);
     
             if let Some(alert) = self.alerts.get_mut(&alert_id) {
