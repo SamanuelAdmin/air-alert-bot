@@ -7,6 +7,8 @@ use teloxide::prelude::*;
 // local modules
 mod parser;
 use parser::{Parser, Alert};
+mod views;
+use views::{View, TelegramBotView};
 
 
 const TRACKED_REGIONS: [u32; 13] = [
@@ -54,21 +56,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "https://api.alerts.in.ua/v1/alerts/active.json".to_string(),
         env_data.alerts_api_token, &TRACKED_REGIONS
     );
-    let bot = Bot::new(env_data.bot_api_token).auto_send();
-    let mut chat_list: Vec<ChatId> = Vec::new();
 
-    // for test only!!!
-    chat_list.push(ChatId(1178323450));
+    let mut tg_bot_view = TelegramBotView::new(
+        &env_data.bot_api_token
+    );
+    tg_bot_view.connect_chat(1178323450);
+
 
     loop {
         let changed_alerts: Vec<&Alert> = parser.parse().await?;
 
         for changed_alert in changed_alerts {
-            for chat_id in &chat_list {
-                bot.send_message(
-                    *chat_id, format!("{}", changed_alert)
-                ).await?;
-            }
+            tg_bot_view.show(&format!("{}", changed_alert)).await?;
             println!("{}", changed_alert);
         }
         
