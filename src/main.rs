@@ -61,8 +61,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut tg_bot_view = TelegramBotView::new(
         &env_data.bot_api_token
-    );
-    tg_bot_view.connect_chat(1178323450);
+    ).await;
+    tg_bot_view.connect_chat(1178323450).await;
+    tg_bot_view.start_bot().await;
 
 
     loop {
