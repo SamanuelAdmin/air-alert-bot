@@ -1,0 +1,11 @@
+{# This is basic template for the bot. #}
+{# You can make your own using Tera syntax. #}
+{# Template will be rendered every time for the new alert message #}
+{# and takes Alert structure as an info source. #}
+
+
+{% if alert.state %}
+ 🚨<a href="{{alert.location_oblast_uid}}"><b>{{ alert.location_title }}</b></a> - повітряна тривога.
+{% else %}
+🟢<a href="{{alert.location_oblast_uid}}"><b>{{ alert.location_title }}</b></a> - відбій повітряної тривоги. 
+{% endif %}

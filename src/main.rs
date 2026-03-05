@@ -3,6 +3,7 @@ use dotenv::dotenv;
 use std::env;
 use std::collections::{HashMap, HashSet};
 use teloxide::prelude::*;
+use tera::Context;
 
 // local modules
 mod configs;
@@ -10,26 +11,11 @@ use configs::get_configs;
 mod parser;
 use parser::{Parser, Alert};
 mod views;
-use views::{View, TelegramBotView};
+use views::{
+    View, TelegramBotView,
+    templates
+};
 
-
-const TRACKED_REGIONS: [u32; 15] = [
-    356,
-    5349,
-    349,
-    353,
-    48,
-    5351,
-    351,
-    42,
-    43,
-    44,
-    45,
-    46,
-    47,
-    5332,
-    332
-];
 
 
 
@@ -56,6 +42,9 @@ fn get_env_data() -> Result<EnvData, Box<dyn std::error::Error>>{
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env_data = get_env_data()?;
     let configs = get_configs();
+    let templates_manager = templates::TemplatesManager::new(
+        configs.default_templates_dir
+    )?;
     
     let mut parser = Parser::new(
         "https://api.alerts.in.ua/v1/alerts/active.json".to_string(),
@@ -73,12 +62,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let changed_alerts: Vec<&Alert> = parser.parse().await?;
 
         for changed_alert in changed_alerts {
-            tg_bot_view.show(&format!("{}", changed_alert)).await?;
+            let mut context = Context::new();
+            context.insert("alert", changed_alert);
+            tg_bot_view.show(
+                // &format!("{}", changed_alert)
+                &templates_manager.render_template(
+                    &configs.template_name, &context
+                )?
+            ).await?;
             println!("{}", changed_alert);
         }
         
 
-        // blocking for 10 seconds
+        // blocking before next request
         sleep(Duration::from_millis(
                 (configs.requests_timeout * 1000).into()
             )).await;

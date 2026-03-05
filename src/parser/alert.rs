@@ -6,9 +6,11 @@ air alerts data (by regions).
 */
 
 use std::fmt;
+use serde::Serialize;
 
 
 // name was taken from official API site alerts.in.ua
+#[derive(Serialize)]
 pub struct Alert {
     pub id: u32, // if id == 0 -> Alert is empty
     pub location_oblast_uid: u32,
