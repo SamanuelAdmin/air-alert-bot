@@ -7,7 +7,7 @@ simple and easy-to-use way (Alert structure)
 */
 
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use reqwest::Client;
 use serde_json::{Value};
@@ -27,10 +27,10 @@ pub struct Parser {
 
 
 impl Parser {
-    pub fn new(url: String, alerts_api_token: String, regions: &[u32]) -> Self{
+    pub fn new(url: String, alerts_api_token: String, regions: &HashSet<u32>) -> Self{
         let mut alerts: HashMap<u32, Alert> = HashMap::with_capacity(regions.len());
     
-        for region in regions {
+        for region in regions.iter() {
             alerts.insert(*region, Alert::new());
         }   
 

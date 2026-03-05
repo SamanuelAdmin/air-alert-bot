@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use teloxide::{
     *, prelude::*,
+    types::ParseMode, utils::html,
     dispatching::DefaultKey,
     utils::command::BotCommands
 };
@@ -152,7 +153,7 @@ impl View for TelegramBotView {
         for chat_id in chats.iter() {
             self.bot.send_message(
                 *chat_id, message
-            ).await?;
+            ).parse_mode(ParseMode::Html).await?;
         }
 
         Ok(())

@@ -1,10 +1,12 @@
 use tokio::time::{sleep, Duration};
 use dotenv::dotenv;
 use std::env;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use teloxide::prelude::*;
 
 // local modules
+mod configs;
+use configs::get_configs;
 mod parser;
 use parser::{Parser, Alert};
 mod views;
@@ -53,10 +55,11 @@ fn get_env_data() -> Result<EnvData, Box<dyn std::error::Error>>{
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env_data = get_env_data()?;
+    let configs = get_configs();
     
     let mut parser = Parser::new(
         "https://api.alerts.in.ua/v1/alerts/active.json".to_string(),
-        env_data.alerts_api_token, &TRACKED_REGIONS
+        env_data.alerts_api_token, &configs.tracked_regions
     );
 
     let mut tg_bot_view = TelegramBotView::new(
@@ -76,7 +79,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         
 
         // blocking for 10 seconds
-        sleep(Duration::from_millis(10000)).await;
+        sleep(Duration::from_millis(
+                (configs.requests_timeout * 1000).into()
+            )).await;
     }
 
     Ok(())
