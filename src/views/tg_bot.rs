@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use teloxide::{
     *, prelude::*,
+    types::{ChatKind, PublicChatKind, UpdateKind},
     types::ParseMode, utils::html,
     dispatching::DefaultKey,
     utils::command::BotCommands
@@ -79,6 +80,21 @@ async fn handle_check(bot: Bot, msg: Message, cmd: Commands, _: Arc<Mutex<HashSe
 }
 
 
+async fn added_to_channel(
+    bot: Bot, update: ChatMemberUpdated, chat_state: Arc<Mutex<HashSet<ChatId>>>
+) -> ResponseResult<()> {
+    let mut chats = chat_state.lock().await;
+    let channel_id = update.chat.id;
+
+    if !chats.contains(&channel_id) {
+        chats.insert(channel_id);
+        println!("Traking new channel: {}", channel_id);
+    }
+
+    Ok(())
+}
+
+
 
 pub struct TelegramBotView {
     bot: Bot,
@@ -87,8 +103,15 @@ pub struct TelegramBotView {
 }
 
 impl TelegramBotView {
-    pub async fn new(token: &str) -> Self {
-        let handler = Update::filter_message()
+    pub async fn new(token: &str, show_updates: bool) -> Self {
+        let handler = dptree::entry()
+        .inspect(move |u: Update| {
+            if (show_updates) {
+                eprintln!("{u:#?}"); // Print the update to the console with inspect
+            }
+        })
+        .branch(
+            Update::filter_message()
             .filter_command::<Commands>()  // Parse as Commands enum
             .branch(
                 dptree::case![Commands::Start]  // Match specific command
@@ -103,8 +126,28 @@ impl TelegramBotView {
             ).branch(
                 dptree::case![Commands::Help]
                     .endpoint(handle_help)
-            );
-
+            )
+        )
+        .branch(
+            Update::filter_my_chat_member()
+            .branch(
+                dptree::filter(|u: Update| {
+                    if let UpdateKind::MyChatMember(m) = &u.kind {
+                        // m.old_chat_member.is_left()
+                             m.new_chat_member.is_present()
+                            && matches!(
+                                    &m.chat.kind, ChatKind::Public(public)
+                                    if matches!(
+                                        public.kind, PublicChatKind::Channel(_)
+                                    )
+                                )
+                    } else {
+                        false
+                    }
+                })
+                .endpoint(added_to_channel),
+            )
+        );
 
         let chat_state = Arc::new(
                 Mutex::new(HashSet::new())

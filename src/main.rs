@@ -52,9 +52,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let mut tg_bot_view = TelegramBotView::new(
-        &env_data.bot_api_token
+        &env_data.bot_api_token, configs.show_updates
     ).await;
-    tg_bot_view.connect_chat(1178323450).await;
+    
+    for con_chat in configs.tracked_chats {
+        tg_bot_view.connect_chat(con_chat).await;
+        println!("Connected chat from the configs: {}", con_chat);
+    }
+
     tg_bot_view.start_bot().await;
 
 

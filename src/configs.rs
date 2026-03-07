@@ -5,10 +5,12 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct Configs {
+    pub show_updates: bool, // config to shows any updates, happend in views
     pub default_templates_dir: String,
     pub template_name: String,
     pub requests_timeout: u16,
-    pub tracked_regions: HashSet<u32>
+    pub tracked_regions: HashSet<u32>,
+    pub tracked_chats: HashSet<i64>
 }
 
 pub static CONFIG_FILEPATH: &str = "./src/config.conf";
