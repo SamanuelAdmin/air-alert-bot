@@ -62,11 +62,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tg_bot_view.start_bot().await;
 
+    // first start flag, if true - nothing will be show after first parse
+    // then will be change to false
+    let mut first_parse_flag = configs.mut_first_start;
 
     loop {
         let changed_alerts: Vec<&Alert> = parser.parse().await?;
 
         for changed_alert in changed_alerts {
+            if first_parse_flag {
+                first_parse_flag = false;
+                break;
+            }
+
             let mut context = Context::new();
             context.insert("alert", changed_alert);
             tg_bot_view.show(

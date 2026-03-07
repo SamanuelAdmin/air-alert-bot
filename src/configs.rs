@@ -10,7 +10,8 @@ pub struct Configs {
     pub template_name: String,
     pub requests_timeout: u16,
     pub tracked_regions: HashSet<u32>,
-    pub tracked_chats: HashSet<i64>
+    pub tracked_chats: HashSet<i64>,
+    pub mut_first_start: bool // do not show anything with first parse cycle
 }
 
 pub static CONFIG_FILEPATH: &str = "./src/config.conf";
