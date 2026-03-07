@@ -14,7 +14,7 @@ pub struct Configs {
     pub mut_first_start: bool // do not show anything with first parse cycle
 }
 
-pub static CONFIG_FILEPATH: &str = "./src/config.conf";
+pub static CONFIG_FILEPATH: &str = "config.conf";
 
 pub fn get_configs() -> Configs {
     let configs: Configs = HoconLoader::new()
