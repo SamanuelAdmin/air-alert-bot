@@ -80,6 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     tg_bot_view.start_bot().await;
+    println!("Systems had been inited and started.");
 
 
     async fn parsing_delay(delay: &u16) {
