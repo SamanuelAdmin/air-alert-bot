@@ -10,7 +10,7 @@ use serde::Serialize;
 
 
 // name was taken from official API site alerts.in.ua
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Alert {
     pub id: u32, // if id == 0 -> Alert is empty
     pub location_oblast_uid: u32,

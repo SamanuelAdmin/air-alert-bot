@@ -47,6 +47,9 @@ async fn tg_bot_show(
             template_name, &context
         )?;
 
+    println!("{:?}", alerts);
+    println!("Render: {}", render);
+
     // views part 
     tg_bot_view.show(&render).await?;
 
@@ -78,24 +81,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tg_bot_view.start_bot().await;
 
+
+    async fn parsing_delay(delay: &u16) {
+        sleep(Duration::from_millis(
+                (delay * 1000).into()
+            )).await;
+    }
+
     // first start flag, if true - nothing will be show after first parse
     // then will be change to false
     let mut first_parse_flag = configs.mut_first_start;
 
     loop {
         let changed_alerts: Vec<&Alert> = parser.parse().await?;
+        if changed_alerts.len() <= 0 {
+            parsing_delay(&configs.requests_timeout).await;
+            continue; // skip empty lists
+        }
 
         if first_parse_flag {
             first_parse_flag = false;
             
             // blocking before next request
-            sleep(Duration::from_millis(
-                (configs.requests_timeout * 1000).into()
-            )).await;
-
+            parsing_delay(&configs.requests_timeout).await;
             continue;
         }
-
+        
         // context makers 
         let mut alerts_active: Vec<&Alert> = Vec::new();
         let mut alerts_deactive: Vec<&Alert> = Vec::new();
@@ -113,18 +124,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}", changed_alert);
         }
 
-        tg_bot_show(
-            &mut tg_bot_view, &templates_manager, 
-            &configs.template_name, &alerts_active
-        ).await?;
-        tg_bot_show(
-            &mut tg_bot_view, &templates_manager, 
-            &configs.template_name, &alerts_deactive
-        ).await?;
+        if alerts_active.len() > 0 {
+            tg_bot_show(
+                &mut tg_bot_view, &templates_manager, 
+                &configs.template_name, &alerts_active
+            ).await?;
+        }
+        if alerts_deactive.len() > 0 {
+            tg_bot_show(
+                &mut tg_bot_view, &templates_manager, 
+                &configs.template_name, &alerts_deactive
+            ).await?;
+        }
+        
         
         // blocking before next request
-        sleep(Duration::from_millis(
-                (configs.requests_timeout * 1000).into()
-            )).await;
+        parsing_delay(&configs.requests_timeout).await;
     }
 }
