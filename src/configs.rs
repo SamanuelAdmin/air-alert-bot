@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use hocon::{HoconLoader, Error};
+use hocon::{HoconLoader};
 use serde::Deserialize;
 
 

@@ -12,6 +12,5 @@ pub use self::view_trait::*;
 pub mod tg_bot;
 pub use self::tg_bot::*;
 pub mod templates;
-pub use self::templates::*;
 
 

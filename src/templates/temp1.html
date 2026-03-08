@@ -4,8 +4,10 @@
 {# and takes Alert structure as an info source. #}
 
 
-{% if alert.state %}
- 🚨<a href="{{alert.location_oblast_uid}}"><b>{{ alert.location_title }}</b></a> - повітряна тривога.
-{% else %}
-🟢<a href="{{alert.location_oblast_uid}}"><b>{{ alert.location_title }}</b></a> - відбій повітряної тривоги. 
-{% endif %}
+{% for alert in alerts %}
+ {% if alert.state %}
+  🚨<a href="{{alert.location_oblast_uid}}"><b>{{ alert.location_title }}</b></a> - повітряна тривога.
+ {% else %}
+ 🟢<a href="{{alert.location_oblast_uid}}"><b>{{ alert.location_title }}</b></a> - відбій повітряної тривоги. 
+ {% endif %}
+{% endfor %}

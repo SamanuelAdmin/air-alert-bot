@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use teloxide::{
     *, prelude::*,
     types::{ChatKind, PublicChatKind, UpdateKind},
-    types::ParseMode, utils::html,
+    types::ParseMode,
     dispatching::DefaultKey,
     utils::command::BotCommands
 };
@@ -30,7 +30,7 @@ enum Commands {
 
 
 // handlers for the Commands
-async fn handle_start(bot: Bot, msg: Message, cmd: Commands, chat_state: Arc<Mutex<HashSet<ChatId>>>)
+async fn handle_start(bot: Bot, msg: Message, _: Commands, chat_state: Arc<Mutex<HashSet<ChatId>>>)
     -> ResponseResult<()> {
     let mut chats = chat_state.lock().await;
     
@@ -70,7 +70,7 @@ async fn handle_help(bot: Bot, msg: Message, _: Commands, _: Arc<Mutex<HashSet<C
 }
 
 
-async fn handle_check(bot: Bot, msg: Message, cmd: Commands, _: Arc<Mutex<HashSet<ChatId>>>)
+async fn handle_check(bot: Bot, msg: Message, _: Commands, _: Arc<Mutex<HashSet<ChatId>>>)
     -> ResponseResult<()> {
     bot.send_message(
             msg.chat.id, "Bot is running."
@@ -81,7 +81,7 @@ async fn handle_check(bot: Bot, msg: Message, cmd: Commands, _: Arc<Mutex<HashSe
 
 
 async fn added_to_channel(
-    bot: Bot, update: ChatMemberUpdated, chat_state: Arc<Mutex<HashSet<ChatId>>>
+    _: Bot, update: ChatMemberUpdated, chat_state: Arc<Mutex<HashSet<ChatId>>>
 ) -> ResponseResult<()> {
     let mut chats = chat_state.lock().await;
     let channel_id = update.chat.id;
@@ -106,7 +106,7 @@ impl TelegramBotView {
     pub async fn new(token: &str, show_updates: bool) -> Self {
         let handler = dptree::entry()
         .inspect(move |u: Update| {
-            if (show_updates) {
+            if show_updates {
                 eprintln!("{u:#?}"); // Print the update to the console with inspect
             }
         })
@@ -176,7 +176,7 @@ impl TelegramBotView {
 
 
     pub async fn start_bot(&mut self) {
-        let mut dispatcher = Arc::clone(
+        let dispatcher = Arc::clone(
             &self.dispatcher// make a clone of a pointer
         );
 
@@ -191,7 +191,7 @@ impl TelegramBotView {
 
 impl View for TelegramBotView {
     async fn show(&mut self, message: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let mut chats = self.process_chats.lock().await;
+        let chats = self.process_chats.lock().await;
 
         for chat_id in chats.iter() {
             self.bot.send_message(

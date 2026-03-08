@@ -8,8 +8,6 @@ simple and easy-to-use way (Alert structure)
 
 
 use std::collections::{HashMap, HashSet};
-use std::fmt;
-use reqwest::Client;
 use serde_json::{Value};
 
 // local imports

@@ -1,8 +1,6 @@
 use tokio::time::{sleep, Duration};
 use dotenv::dotenv;
 use std::env;
-use std::collections::{HashMap, HashSet};
-use teloxide::prelude::*;
 use tera::Context;
 
 // local modules
@@ -37,6 +35,24 @@ fn get_env_data() -> Result<EnvData, Box<dyn std::error::Error>>{
 }
 
 
+async fn tg_bot_show(
+    tg_bot_view: &mut TelegramBotView, templates_manager: &templates::TemplatesManager, 
+    template_name: &str, alerts: &Vec<&Alert>
+) -> Result<(), Box<dyn std::error::Error>> {
+    // show function for telegram bot
+    let mut context = Context::new();
+    context.insert("alerts", alerts);
+    
+    let render = templates_manager.render_template(
+            template_name, &context
+        )?;
+
+    // views part 
+    tg_bot_view.show(&render).await?;
+
+    Ok(())
+}
+
 // This is needed to run `async` main function via tokio runtime
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -69,29 +85,46 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         let changed_alerts: Vec<&Alert> = parser.parse().await?;
 
-        for changed_alert in changed_alerts {
-            if first_parse_flag {
-                first_parse_flag = false;
-                break;
+        if first_parse_flag {
+            first_parse_flag = false;
+            
+            // blocking before next request
+            sleep(Duration::from_millis(
+                (configs.requests_timeout * 1000).into()
+            )).await;
+
+            continue;
+        }
+
+        // context makers 
+        let mut alerts_active: Vec<&Alert> = Vec::new();
+        let mut alerts_deactive: Vec<&Alert> = Vec::new();
+
+        for changed_alert in &changed_alerts {
+            // you can also add some views here,
+            // if you need to process every message
+            
+            if changed_alert.state {
+                alerts_active.push(changed_alert);
+            } else {
+                alerts_deactive.push(changed_alert);
             }
 
-            let mut context = Context::new();
-            context.insert("alert", changed_alert);
-            tg_bot_view.show(
-                // &format!("{}", changed_alert)
-                &templates_manager.render_template(
-                    &configs.template_name, &context
-                )?
-            ).await?;
             println!("{}", changed_alert);
         }
-        
 
+        tg_bot_show(
+            &mut tg_bot_view, &templates_manager, 
+            &configs.template_name, &alerts_active
+        ).await?;
+        tg_bot_show(
+            &mut tg_bot_view, &templates_manager, 
+            &configs.template_name, &alerts_deactive
+        ).await?;
+        
         // blocking before next request
         sleep(Duration::from_millis(
                 (configs.requests_timeout * 1000).into()
             )).await;
     }
-
-    Ok(())
 }
