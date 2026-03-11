@@ -16,21 +16,21 @@ impl AlertsApiClient {
         }
     }
 
-    pub async fn get(&self) -> Result<String, String> {
+    pub async fn get(&self) -> Result<String, Box<dyn std::error::Error>> {
         let request = match self.client.get(
                 &(format!("{}?token={}", self.url, self.token))
             ).send().await {
                 Ok(response) => response,
-                Err(error) => return Err(
-                    format!("Got error when making request: {error}")
-                )
+                Err(error) => {
+                    return Err(Box::new(error));
+                }
             };
 
         let data = match request.text().await {
             Ok(response) => response,
-            Err(error) => return Err(
-                format!("Error with getting text: {error}")
-            )
+            Err(error) => {
+                return Err(Box::new(error));
+            }
         };
 
         return Ok(data);
