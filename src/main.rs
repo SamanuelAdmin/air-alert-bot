@@ -47,8 +47,6 @@ async fn tg_bot_show(
             template_name, &context
         )?;
 
-    println!("{:?}", alerts);
-    println!("Render: {}", render);
 
     // views part 
     if notifications {
