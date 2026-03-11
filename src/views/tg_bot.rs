@@ -10,7 +10,7 @@ use tokio::task;
 use std::sync::Arc;
 use tokio::sync::Mutex; // for async access to the data
 
-use super::view_trait::View;
+use super::view_trait::{ View, SilentView };
 
 
 
@@ -73,7 +73,7 @@ async fn handle_help(bot: Bot, msg: Message, _: Commands, _: Arc<Mutex<HashSet<C
 async fn handle_check(bot: Bot, msg: Message, _: Commands, _: Arc<Mutex<HashSet<ChatId>>>)
     -> ResponseResult<()> {
     bot.send_message(
-            msg.chat.id, "Bot is running."
+            msg.chat.id, "Bot is running.", 
         ).await?;
 
     Ok(())
@@ -185,18 +185,18 @@ impl TelegramBotView {
             dispatcher_clone.dispatch().await;
         });
     }
-}
 
-
-
-impl View for TelegramBotView {
-    async fn show(&mut self, message: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // API for showing view, could me anything whatever you want
+    async fn _show(&mut self, message: &str, notifications: bool)
+        -> Result<(), Box<dyn std::error::Error>> {
         let chats = self.process_chats.lock().await;
 
         for chat_id in chats.iter() {
             self.bot.send_message(
                 *chat_id, message
-            ).parse_mode(ParseMode::Html).await?;
+            )
+                .disable_notification(!notifications)
+                .parse_mode(ParseMode::Html).await?;
         }
 
         Ok(())
@@ -204,4 +204,17 @@ impl View for TelegramBotView {
 }
 
 
+
+impl View for TelegramBotView {
+    async fn show(&mut self, message: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self._show(message, true).await
+    }
+}
+
+
+impl SilentView for TelegramBotView {
+    async fn show(&mut self, message: &str) -> Result<(), Box<dyn std::error::Error>> {
+        self._show(message, false).await
+    }
+}
 

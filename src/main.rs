@@ -10,7 +10,7 @@ mod parser;
 use parser::{Parser, Alert};
 mod views;
 use views::{
-    View, TelegramBotView,
+    View, SilentView, TelegramBotView,
     templates
 };
 
@@ -37,7 +37,7 @@ fn get_env_data() -> Result<EnvData, Box<dyn std::error::Error>>{
 
 async fn tg_bot_show(
     tg_bot_view: &mut TelegramBotView, templates_manager: &templates::TemplatesManager, 
-    template_name: &str, alerts: &Vec<&Alert>
+    template_name: &str, alerts: &Vec<&Alert>, notifications: bool
 ) -> Result<(), Box<dyn std::error::Error>> {
     // show function for telegram bot
     let mut context = Context::new();
@@ -51,7 +51,11 @@ async fn tg_bot_show(
     println!("Render: {}", render);
 
     // views part 
-    tg_bot_view.show(&render).await?;
+    if notifications {
+        <TelegramBotView as View>::show(tg_bot_view, &render).await?;
+    } else {
+        <TelegramBotView as SilentView>::show(tg_bot_view, &render).await?;
+    }
 
     Ok(())
 }
@@ -128,13 +132,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if alerts_active.len() > 0 {
             tg_bot_show(
                 &mut tg_bot_view, &templates_manager, 
-                &configs.template_name, &alerts_active
+                &configs.template_name, &alerts_active, true
             ).await?;
         }
         if alerts_deactive.len() > 0 {
             tg_bot_show(
                 &mut tg_bot_view, &templates_manager, 
-                &configs.template_name, &alerts_deactive
+                &configs.template_name, &alerts_deactive, false
             ).await?;
         }
         

@@ -3,3 +3,7 @@ pub trait View {
         -> Result<(), Box<dyn std::error::Error>>; 
 }
 
+pub trait SilentView {
+    async fn show(&mut self, message: &str)
+        -> Result<(), Box<dyn std::error::Error>>;
+}
